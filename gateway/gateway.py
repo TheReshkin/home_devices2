@@ -20,6 +20,11 @@ GATEWAY_ENDPOINT = "/gateway"
 AUTH_ENDPOINT = "/auth"
 
 
+def write_log(log_message, log_file="gateway_log.txt"):
+    with open(log_file, "a") as log:
+        log.write(log_message + "\n")
+
+
 # device_types = ["humidity sensor", "thermometer", "socket", "switch", "lamp"]
 # # Функция для перенаправления print в логи
 # def print_to_log(msg):
@@ -41,7 +46,7 @@ def gateway():
         try:
             dev_name = data["params"]["device_name"]
             req = data["params"]["request"]
-            print(f"Received data from {remote_addr}. DeviceName: {dev_name}, Data: {req}")
+            write_log(f"Received data from {remote_addr}. DeviceName: {dev_name}, Data: {req}")
         except Exception:
             print(f"Received data from {remote_addr}. ")
 
@@ -50,7 +55,7 @@ def gateway():
             f"http://{HOME_ASSISTANT_HOST}:{HOME_ASSISTANT_PORT}/",
             json=data
         )
-        print(data)
+        write_log(data)
 
         if response.status_code == 200:
             return "Success", 200
@@ -73,15 +78,17 @@ def auth():
         try:
             name = data["params"]["auth"]["Name"]
             dev_type = data["params"]["auth"]["Device_type"]
-            print(f"Received auth data from {remote_addr}. DeviceName: {name}, Dev_type: {dev_type}")
+            write_log(f"Received auth data from {remote_addr}. DeviceName: {name}, Dev_type: {dev_type}")
+            write_log("Success 200")
             return "Success", 200
         except Exception:
-           return str(f"Received data from {remote_addr}.")
+            write_log(f"Received data from {remote_addr}.")
+            return str(f"Received data from {remote_addr}.")
 
     # добавить создание rsa ключа и токена
 
     except Exception as e:
-        print("Все сломалось в аутентификации ")
+        write_log("Все сломалось в аутентификации ")
         return str(e), 500
 
 

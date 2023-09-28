@@ -25,6 +25,11 @@ state = "on"
 device_types = ["humidity_sensor", "thermometer", "socket", "switch", "lamp"]
 
 
+def write_log(log_message, log_file="device_log.txt"):
+    with open(log_file, "a") as log:
+        log.write(log_message + "\n")
+
+
 def send_data():
     # remote_addr = request.remote_addr
     # print(remote_addr)
@@ -51,9 +56,10 @@ def send_data():
                 }
             }
             response = requests.post(f"http://{GATEWAY_HOST}:{GATEWAY_PORT}/gateway", json=device_data)
-            print(response.status_code)
+            write_log(response.status_code)
         except Exception as e:
             print(e)
+            write_log(e)
             return str(e), 500
         time.sleep(60)
 
@@ -64,7 +70,7 @@ def auth_request():
     # временное добавление в белый список
     white_list = [socket.gethostbyname(GATEWAY_HOST)]
     print("WhiteList: " + str(white_list))
-
+    write_log("WhiteList: " + str(white_list))
     try:
         print('auth_request')
         device_data = {
@@ -78,10 +84,12 @@ def auth_request():
             }
         }
         response = requests.post(f"http://{GATEWAY_HOST}:{GATEWAY_PORT}/auth", json=device_data)
-        print(response.status_code)
+        write_log(response.status_code)
+
 
     except Exception as e:
         print(e)
+        write_log(e)
         # ждет 5 сек и снова пытается авторизоваться
         time.sleep(5)
         auth_request()

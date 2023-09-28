@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, render_template
 import logging
 
 app = Flask(__name__)
-
+global device_state
 # logging.basicConfig(level=logging.DEBUG)
 # logger = logging.getLogger(__name__)
 
@@ -19,6 +19,10 @@ device_types = ["humidity sensor", "thermometer", "socket", "switch", "lamp"]
 # # Перенаправление stdout в логи
 # sys.stdout.write = print_to_log
 
+def write_log(log_message, log_file="home_assistant_log.txt"):
+    with open(log_file, "a") as log:
+        log.write(log_message + "\n")
+
 
 @app.route('/', methods=['POST'])
 def get_data():
@@ -32,20 +36,19 @@ def get_data():
             'received_data': data
         }
         print(response_data)
+        write_log(str(response_data))
         return jsonify(response_data), 200  # Ответ в формате JSON и статус HTTP 200 (OK)
 
 
 # управление устройствами
 @app.route('/turn_on')
 def turn_on():
-    global device_state
     device_state = "on"
     return render_template('index.html', device_state=device_state)
 
 
 @app.route('/turn_off')
 def turn_off():
-    global device_state
     device_state = "off"
     return render_template('index.html', device_state=device_state)
 

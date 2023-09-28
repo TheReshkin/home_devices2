@@ -3,6 +3,8 @@ FROM python:3.9
 
 # Установите зависимости из requirements.txt
 COPY ../requirements.txt /app/requirements.txt
+COPY ../templates /app/templates
+
 RUN pip install -r /app/requirements.txt
 
 # Копируйте код в контейнер
