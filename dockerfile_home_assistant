@@ -1,0 +1,15 @@
+# Используйте базовый образ Python
+FROM python:3.9
+
+# Установите зависимости из requirements.txt
+COPY requirements.txt /app/requirements.txt
+RUN pip install -r /app/requirements.txt
+
+# Копируйте код в контейнер
+COPY home_assistant.py /app
+
+# Установите рабочую директорию
+WORKDIR /app
+EXPOSE 8080
+# Запустите ваш код (например, с помощью команды python app.py)
+CMD ["python", "home_assistant.py"]

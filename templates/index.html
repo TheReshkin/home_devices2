@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Управление устройством</title>
+</head>
+<body>
+    <h1>Состояние устройства: {{ device_state }}</h1>
+    <form action="/turn_on" method="get">
+        <input type="submit" value="Включить">
+    </form>
+    <form action="/turn_off" method="get">
+        <input type="submit" value="Выключить">
+    </form>
+</body>
+</html>
