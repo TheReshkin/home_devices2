@@ -3,7 +3,7 @@ services:
   device:
     build:
       context: ./app/device  # Путь к директории с кодом устройства
-      dockerfile: dockerfile_device
+      dockerfile: device/dockerfile_device
     image: device
     container_name: device
     environment:
@@ -17,7 +17,7 @@ services:
   gateway:
     build:
       context: ./app/gateway  # Путь к директории с кодом шлюза
-      dockerfile: dockerfile_gateway
+      dockerfile: gateway/dockerfile_gateway
     image: gateway
     container_name: gateway
     environment:
@@ -30,7 +30,7 @@ services:
   home_assistant:
     build:
       context: ./app/home_assistant  # Путь к директории с кодом Home Assistant
-      dockerfile: dockerfile_home_assistant
+      dockerfile: home_assistant/dockerfile_home_assistant
     image: home_assistant
     container_name: home_assistant
     ports:

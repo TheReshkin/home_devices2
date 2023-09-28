@@ -2,14 +2,17 @@
 FROM python:3.9
 
 # Установите зависимости из requirements.txt
-COPY requirements.txt /app/requirements.txt
+COPY ../requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
 
 # Копируйте код в контейнер
-COPY home_assistant.py /app
+COPY gateway.py /app
 
+#ENV HOME_ASSISTANT_HOST="home_assistant"
+#ENV HOME_ASSISTANT_PORT="8080"
+#ENV GATEWAY_PORT="80"
+#ENV FLASK_ENV=production
 # Установите рабочую директорию
 WORKDIR /app
-EXPOSE 8080
 # Запустите ваш код (например, с помощью команды python app.py)
-CMD ["python", "home_assistant.py"]
+CMD ["python", "gateway.py"]
