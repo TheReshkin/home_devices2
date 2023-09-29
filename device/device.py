@@ -32,6 +32,7 @@ def write_log(log_message, log_file="device_log.txt"):
         log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
 
 
+# обработчик запросов от gateway
 @app.route("/manage", methods=["POST"])
 def receive_data():
     global state

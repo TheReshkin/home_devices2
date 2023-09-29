@@ -1,10 +1,11 @@
 import sys
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests
 import os
 import logging
 from datetime import datetime
+
 app = Flask(__name__)
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -19,11 +20,12 @@ GATEWAY_PORT = os.environ.get('GATEWAY_PORT')
 GATEWAY_ENDPOINT = "/gateway"
 AUTH_ENDPOINT = "/auth"
 
+devices = {"pupa_lamp": "device"}
 
-def write_log(log_message, log_file="device_log.txt"):
+
+def write_log(log_message, log_file="gateway_log.txt"):
     with open(log_file, "a") as log:
         log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
-
 
 
 # device_types = ["humidity sensor", "thermometer", "socket", "switch", "lamp"]
@@ -59,10 +61,63 @@ def gateway():
         write_log(data)
 
         if response.status_code == 200:
-            return "Success", 200
+            return "Success. connected to Home Assistant", 200
         else:
             return "Failed to communicate with Home Assistant", 500
 
+    except Exception as e:
+        print(e)
+        return str(e), 500
+
+
+# обработчик запросов от home_assistant
+@app.route("/manage", methods=["POST"])
+def receive_data():
+    global state
+    try:
+        data = request.json
+        remote_addr = request.remote_addr
+        try:
+            state_req = data.get('state')
+            code = data.get('code')
+            # скорее как затычка, должен сравнивать с данными в бд, которой нет :)
+            device = data.get('device')
+            write_log(code)
+            if code is None or code != 123 or remote_addr != HOME_ASSISTANT_HOST:
+                write_log("/manage" + "Auth error")
+                return jsonify(result="Auth error")
+            else:
+                if state_req == 'off':
+                    state = "OFF"
+                    result = 'State: off'
+                    response = requests.post(f"http://{device}/manage", json={
+                        "state": "OFF",
+                        "code": 123
+                    }, headers={
+                        "Content-Type": "application/json"
+                    })
+                    write_log(f"Send data to {device} code: " + str(response.status_code))
+                    write_log("curr state" + str(state))
+                elif state_req == 'on':
+                    state = "ON"
+                    result = 'State: On'
+                    response = requests.post(f"http://{device}/manage", json={
+                        "state": "ON",
+                        "code": 123
+                    }, headers={
+                        "Content-Type": "application/json"
+                    })
+                    write_log(f"Send data to {device} code: " + str(response.status_code))
+                    write_log("curr state" + str(state))
+                else:
+                    result = "wrong param state"
+                # Верните ответ в формате JSON
+                write_log("/manage " + str(data))
+                return jsonify(result=result)
+        except Exception:
+            write_log(f"Received data from {remote_addr}. ")
+
+        write_log(data)
     except Exception as e:
         print(e)
         return str(e), 500
@@ -81,6 +136,7 @@ def auth():
             dev_type = data["params"]["auth"]["Device_type"]
             write_log(f"Received auth data from {remote_addr}. DeviceName: {name}, Dev_type: {dev_type}")
             write_log("Success 200")
+            devices[name] = remote_addr
             return "Success", 200
         except Exception:
             write_log(f"Received data from {remote_addr}.")

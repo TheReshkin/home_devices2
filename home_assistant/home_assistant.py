@@ -20,7 +20,7 @@ device_types = ["humidity sensor", "thermometer", "socket", "switch", "lamp"]
 # # Перенаправление stdout в логи
 # sys.stdout.write = print_to_log
 
-def write_log(log_message, log_file="device_log.txt"):
+def write_log(log_message, log_file="home_assistant_log.txt"):
     with open(log_file, "a") as log:
         log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
 
