@@ -1,8 +1,26 @@
 # Используйте базовый образ Python
 FROM python:3.9
+## Обновите пакеты и установите зависимости
+#RUN apt-get update && apt-get install -y \
+#    curl \
+#    && rm -rf /var/lib/apt/lists/*
+#
+## Установите Rust с помощью установщика Rust (rustup)
+#RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+#
+## Добавьте Rust в PATH
+#ENV PATH="/root/.cargo/bin:${PATH}"
+#
+## Установите именно ту версию Rust, которая вам нужна
+## Этот пример устанавливает Rust 1.56.0
+#RUN rustup install 1.56.0
+#
+## Установите Rust по умолчанию
+#RUN rustup default 1.56.0
 
 # Установите зависимости из requirements.txt
-COPY ../requirements.txt /app/requirements.txt
+COPY requirements.txt /app/requirements.txt
+RUN pip install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
 # Копируйте код в контейнер

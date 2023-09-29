@@ -35,5 +35,5 @@ services:
     container_name: home_assistant
     ports:
       - 9997:8080
-
+    restart: always
 

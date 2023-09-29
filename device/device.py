@@ -5,12 +5,14 @@ import time
 import socket
 import threading
 
-# библиотеки для шифрования данных
-from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+from datetime import datetime
+
+# # библиотеки для шифрования данных
+# from cryptography.fernet import Fernet
+# from cryptography.hazmat.primitives import hashes
+# from cryptography.hazmat.primitives.asymmetric import rsa
+# from cryptography.hazmat.primitives import serialization
+# from cryptography.hazmat.primitives.asymmetric import padding
 
 app = Flask(__name__)
 
@@ -27,7 +29,29 @@ device_types = ["humidity_sensor", "thermometer", "socket", "switch", "lamp"]
 
 def write_log(log_message, log_file="device_log.txt"):
     with open(log_file, "a") as log:
-        log.write(log_message + "\n")
+        log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
+
+
+@app.route("/manage", methods="POST")
+def receive_data():
+    try:
+        # Получаем данные из входящего HTTP запроса
+        data = request.json
+        args = request.args
+        headers = request.headers
+        remote_addr = request.remote_addr
+        try:
+            dev_name = data["params"]["device_name"]
+            req = data["params"]["request"]
+            write_log(f"Received data from {remote_addr}. DeviceName: {dev_name}, Data: {req}")
+        except Exception:
+            print(f"Received data from {remote_addr}. ")
+
+        write_log(data)
+
+    except Exception as e:
+        print(e)
+        return str(e), 500
 
 
 def send_data():
@@ -56,7 +80,7 @@ def send_data():
                 }
             }
             response = requests.post(f"http://{GATEWAY_HOST}:{GATEWAY_PORT}/gateway", json=device_data)
-            write_log(response.status_code)
+            # write_log(response.status_code)
         except Exception as e:
             print(e)
             write_log(e)
@@ -96,6 +120,7 @@ def auth_request():
         # return str(e), 500
 
 
+# поменять библиотеку, в контейнере не робит
 class Time:
     def __init__(self):
         self.start = time.time()  # точка отсчета времени

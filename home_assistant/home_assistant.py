@@ -2,6 +2,7 @@ import sys
 
 from flask import Flask, request, jsonify, render_template
 import logging
+from datetime import datetime
 
 app = Flask(__name__)
 global device_state
@@ -19,9 +20,9 @@ device_types = ["humidity sensor", "thermometer", "socket", "switch", "lamp"]
 # # Перенаправление stdout в логи
 # sys.stdout.write = print_to_log
 
-def write_log(log_message, log_file="home_assistant_log.txt"):
+def write_log(log_message, log_file="device_log.txt"):
     with open(log_file, "a") as log:
-        log.write(log_message + "\n")
+        log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
 
 
 @app.route('/', methods=['POST'])

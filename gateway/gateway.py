@@ -4,7 +4,7 @@ from flask import Flask, request
 import requests
 import os
 import logging
-
+from datetime import datetime
 app = Flask(__name__)
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -20,9 +20,10 @@ GATEWAY_ENDPOINT = "/gateway"
 AUTH_ENDPOINT = "/auth"
 
 
-def write_log(log_message, log_file="gateway_log.txt"):
+def write_log(log_message, log_file="device_log.txt"):
     with open(log_file, "a") as log:
-        log.write(log_message + "\n")
+        log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
+
 
 
 # device_types = ["humidity sensor", "thermometer", "socket", "switch", "lamp"]
