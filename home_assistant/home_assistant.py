@@ -38,6 +38,7 @@ def get_data():
         }
         print(response_data)
         write_log(str(response_data))
+        write_log(str([request.args, request.headers]))
         return jsonify(response_data), 200  # Ответ в формате JSON и статус HTTP 200 (OK)
 
 

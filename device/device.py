@@ -23,7 +23,7 @@ DEVICE_NAME = os.environ.get('DEVICE_NAME')
 DEVICE_TYPE = os.environ.get('DEVICE_TYPE')
 
 # глобальные состояния устройства
-state = "on"
+global state
 device_types = ["humidity_sensor", "thermometer", "socket", "switch", "lamp"]
 
 
@@ -32,20 +32,28 @@ def write_log(log_message, log_file="device_log.txt"):
         log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
 
 
-@app.route("/manage", methods="POST")
+@app.route("/manage", methods=["POST"])
 def receive_data():
+    global state
     try:
         # Получаем данные из входящего HTTP запроса
         data = request.json
-        args = request.args
-        headers = request.headers
+
         remote_addr = request.remote_addr
+        write_log("/manage" + str(data) + " " + str(request.form.get('state')))
         try:
-            dev_name = data["params"]["device_name"]
-            req = data["params"]["request"]
-            write_log(f"Received data from {remote_addr}. DeviceName: {dev_name}, Data: {req}")
+            state = request.form.get('state')
+
+            # Обработайте значение 'state' по вашей логике
+            if state == 'off':
+                result = 'Состояние: Выключено'
+            else:
+                result = 'Состояние: Включено'
+
+            # Верните ответ в формате JSON
+            return jsonify(result=result)
         except Exception:
-            print(f"Received data from {remote_addr}. ")
+            write_log(f"Received data from {remote_addr}. ")
 
         write_log(data)
 
@@ -63,7 +71,8 @@ def send_data():
     while True:
         print(f"Sending data to the gateway {GATEWAY_HOST} {run_time.get_time_run()}")
         try:
-
+            global state
+            state = "OFF"
             # парсинг намерений отправителя (проверка есть ли отправитель в белом списке)
             # обмен rsa ключом
             # дешифровка rsa ключом
@@ -80,6 +89,7 @@ def send_data():
                 }
             }
             response = requests.post(f"http://{GATEWAY_HOST}:{GATEWAY_PORT}/gateway", json=device_data)
+            print(response.status_code)
             # write_log(response.status_code)
         except Exception as e:
             print(e)
