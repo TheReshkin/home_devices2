@@ -5,6 +5,8 @@ import requests
 import os
 import logging
 from datetime import datetime
+import time
+
 
 app = Flask(__name__)
 
@@ -34,6 +36,31 @@ def send_to_home_assistant(data, method="POST"):
         return response.status_code
     else:
         return 0
+
+
+def auth_request():
+    # инициатор подключения устройство, оно отправляет запрос на подключение,
+    # шлюз возвращает публичный rsa ключ, шлюз добавляется в белый список, дальнейшее общение шифруется
+    # временное добавление в белый список
+    try:
+        print('auth_request')
+        gateway_data = {
+            "params": {
+                "auth": {
+                    "Name": "gateway",
+                    "Device_type": f"gateway",
+                    "code": 123
+                }
+            }
+        }
+        response = requests.post(f"http://{HOME_ASSISTANT_HOST}:{HOME_ASSISTANT_PORT}/auth", json=gateway_data)
+        write_log(response.status_code)
+    except Exception as e:
+        print(e)
+        write_log(e)
+        # ждет 5 сек и снова пытается авторизоваться
+        time.sleep(5)
+        auth_request()
 
 
 # device_types = ["humidity sensor", "thermometer", "socket", "switch", "lamp"]
@@ -88,14 +115,12 @@ def gateway():
 @app.route("/manage", methods=["POST"])
 def receive_data():
     global state
-
+    data = request.get_json()
+    remote_addr = request.remote_addr
     try:
-        data = request.get_json()
-        remote_addr = request.remote_addr
-
         state_req = data.get('state')
         code = data.get('code')
-        device = data.get('device', '')  # Получаем параметр 'device', если его нет, используем пустую строку
+        device = data.get('device')
 
         if code is None or code != 123:
             write_log("/manage" + "Auth error")
@@ -105,7 +130,8 @@ def receive_data():
             state = "OFF" if state_req == 'off' else "ON"
             result = f'State: {state_req}'
 
-            response = requests.post(f"http://{device}/manage", json={"state": state_req, "code": 123}, headers={"Content-Type": "application/json"})
+            response = requests.post(f"http://{device}/manage", json={"state": state_req, "code": 123},
+                                     headers={"Content-Type": "application/json"})
 
             if response.status_code != 200:
                 result = f"Device interaction error {response.status_code}"
@@ -121,6 +147,7 @@ def receive_data():
     except Exception as e:
         write_log(f"Received data from {remote_addr}. {str(e)}")
         return str(e), 500
+
 
 @app.route(AUTH_ENDPOINT, methods=["POST"])
 def auth():
@@ -150,4 +177,5 @@ def auth():
 
 
 if __name__ == "__main__":
+    auth_request()
     app.run(host="0.0.0.0", port=GATEWAY_PORT)  # Замените на нужный вам порт шлюза

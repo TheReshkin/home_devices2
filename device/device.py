@@ -52,11 +52,11 @@ def receive_data():
                 if state_req == 'off':
                     state = "OFF"
                     result = 'State: off'
-                    write_log("curr state" + str(state))
+                    write_log("curr state " + str(state))
                 elif state_req == 'on':
                     state = "ON"
                     result = 'State: On'
-                    write_log("curr state" + str(state))
+                    write_log("curr state " + str(state))
                 else:
                     result = "wrong param state"
                 # Верните ответ в формате JSON
@@ -129,8 +129,6 @@ def auth_request():
         }
         response = requests.post(f"http://{GATEWAY_HOST}:{GATEWAY_PORT}/auth", json=device_data)
         write_log(response.status_code)
-
-
     except Exception as e:
         print(e)
         write_log(e)
