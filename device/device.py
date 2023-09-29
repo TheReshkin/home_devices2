@@ -40,18 +40,27 @@ def receive_data():
         data = request.json
 
         remote_addr = request.remote_addr
-        write_log("/manage" + str(data) + " " + str(request.form.get('state')))
         try:
-            state = request.form.get('state')
-
-            # Обработайте значение 'state' по вашей логике
-            if state == 'off':
-                result = 'Состояние: Выключено'
+            state_req = data.get('state')
+            code = data.get('code')
+            write_log(code)
+            if code is None or code != 123:
+                write_log("/manage" + "Auth error")
+                return jsonify(result="Auth error")
             else:
-                result = 'Состояние: Включено'
-
-            # Верните ответ в формате JSON
-            return jsonify(result=result)
+                if state_req == 'off':
+                    state = "OFF"
+                    result = 'State: off'
+                    write_log("curr state" + str(state))
+                elif state_req == 'on':
+                    state = "ON"
+                    result = 'State: On'
+                    write_log("curr state" + str(state))
+                else:
+                    result = "wrong param state"
+                # Верните ответ в формате JSON
+                write_log("/manage " + str(data))
+                return jsonify(result=result)
         except Exception:
             write_log(f"Received data from {remote_addr}. ")
 
