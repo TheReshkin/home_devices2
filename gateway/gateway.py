@@ -28,6 +28,14 @@ def write_log(log_message, log_file="gateway_log.txt"):
         log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
 
 
+def send_to_home_assistant(data, method="POST"):
+    if method == "POST":
+        response = requests.post(f"http://{HOME_ASSISTANT_HOST}:{HOME_ASSISTANT_PORT}/receive", json=data)
+        return response.status_code
+    else:
+        return 0
+
+
 # device_types = ["humidity sensor", "thermometer", "socket", "switch", "lamp"]
 # # Функция для перенаправления print в логи
 # def print_to_log(msg):
@@ -46,24 +54,30 @@ def gateway():
         args = request.args
         headers = request.headers
         remote_addr = request.remote_addr
+        valid = False
         try:
             dev_name = data["params"]["device_name"]
             req = data["params"]["request"]
             write_log(f"Received data from {remote_addr}. DeviceName: {dev_name}, Data: {req}")
-        except Exception:
+            valid = True if send_to_home_assistant(data) == 200 else False
+        except Exception as e:
+            write_log(str(e) + f" invalid request from {remote_addr}. Data: {data}")
             print(f"Received data from {remote_addr}. ")
 
-        # Отправляем данные на головной контроллер Home Assistant
-        response = requests.post(
-            f"http://{HOME_ASSISTANT_HOST}:{HOME_ASSISTANT_PORT}/",
-            json=data
-        )
-        write_log(data)
+        if valid:
+            # Отправляем данные на головной контроллер Home Assistant
+            response = requests.post(
+                f"http://{HOME_ASSISTANT_HOST}:{HOME_ASSISTANT_PORT}/receive",
+                json=data
+            )
+            write_log(data)
 
-        if response.status_code == 200:
-            return "Success. connected to Home Assistant", 200
-        else:
-            return "Failed to communicate with Home Assistant", 500
+            if response.status_code == 200:
+                return "Success. connected to Home Assistant", 200
+            else:
+                return "Failed to communicate with Home Assistant", 500
+        if not valid:
+            return jsonify(error="Invalid request, wrong params"), 400
 
     except Exception as e:
         print(e)
@@ -74,54 +88,39 @@ def gateway():
 @app.route("/manage", methods=["POST"])
 def receive_data():
     global state
+
     try:
-        data = request.json
+        data = request.get_json()
         remote_addr = request.remote_addr
-        try:
-            state_req = data.get('state')
-            code = data.get('code')
-            # скорее как затычка, должен сравнивать с данными в бд, которой нет :)
-            device = data.get('device')
-            write_log(code)
-            if code is None or code != 123 or remote_addr != HOME_ASSISTANT_HOST:
-                write_log("/manage" + "Auth error")
-                return jsonify(result="Auth error")
-            else:
-                if state_req == 'off':
-                    state = "OFF"
-                    result = 'State: off'
-                    response = requests.post(f"http://{device}/manage", json={
-                        "state": "OFF",
-                        "code": 123
-                    }, headers={
-                        "Content-Type": "application/json"
-                    })
-                    write_log(f"Send data to {device} code: " + str(response.status_code))
-                    write_log("curr state" + str(state))
-                elif state_req == 'on':
-                    state = "ON"
-                    result = 'State: On'
-                    response = requests.post(f"http://{device}/manage", json={
-                        "state": "ON",
-                        "code": 123
-                    }, headers={
-                        "Content-Type": "application/json"
-                    })
-                    write_log(f"Send data to {device} code: " + str(response.status_code))
-                    write_log("curr state" + str(state))
-                else:
-                    result = "wrong param state"
-                # Верните ответ в формате JSON
-                write_log("/manage " + str(data))
-                return jsonify(result=result)
-        except Exception:
-            write_log(f"Received data from {remote_addr}. ")
 
-        write_log(data)
+        state_req = data.get('state')
+        code = data.get('code')
+        device = data.get('device', '')  # Получаем параметр 'device', если его нет, используем пустую строку
+
+        if code is None or code != 123:
+            write_log("/manage" + "Auth error")
+            return jsonify(result="Auth error")
+
+        if state_req in ['off', 'on']:
+            state = "OFF" if state_req == 'off' else "ON"
+            result = f'State: {state_req}'
+
+            response = requests.post(f"http://{device}/manage", json={"state": state_req, "code": 123}, headers={"Content-Type": "application/json"})
+
+            if response.status_code != 200:
+                result = f"Device interaction error {response.status_code}"
+                write_log(f"Sending data to {device} code: {response.status_code}")
+
+        else:
+            result = "wrong param state"
+
+        write_log("/manage " + str(data))
+        write_log("curr state " + state)
+        return jsonify(result=result)
+
     except Exception as e:
-        print(e)
+        write_log(f"Received data from {remote_addr}. {str(e)}")
         return str(e), 500
-
 
 @app.route(AUTH_ENDPOINT, methods=["POST"])
 def auth():
@@ -137,6 +136,7 @@ def auth():
             write_log(f"Received auth data from {remote_addr}. DeviceName: {name}, Dev_type: {dev_type}")
             write_log("Success 200")
             devices[name] = remote_addr
+
             return "Success", 200
         except Exception:
             write_log(f"Received data from {remote_addr}.")

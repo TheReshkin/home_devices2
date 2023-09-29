@@ -25,21 +25,23 @@ def write_log(log_message, log_file="home_assistant_log.txt"):
         log.write(str(datetime.now().time()) + " -- " + str(log_message) + "\n")
 
 
-@app.route('/', methods=['POST'])
+@app.route('/receive', methods=['POST'])
 def get_data():
+    data = request.json
+    remote_addr = request.remote_addr
     if request.method == 'POST':
         # Получение данных из POST-запроса
-        data = request.json  # Предполагается, что данные в формате JSON
 
         # Отправка ответа
         response_data = {
             'message': 'Запрос получен и обработан успешно',
             'received_data': data
         }
-        print(response_data)
         write_log(str(response_data))
-        write_log(str([request.args, request.headers]))
         return jsonify(response_data), 200  # Ответ в формате JSON и статус HTTP 200 (OK)
+    else:
+        write_log(f" Request from {remote_addr}. Data: {data}")
+        return jsonify("Wrong method"), 400
 
 
 # управление устройствами
