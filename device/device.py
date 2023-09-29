@@ -153,34 +153,34 @@ class Time:
         return time.time() - self.start
 
 
-class Encrypt:
-    def __init__(self):
-        # Генерация ключей для асимметричной криптографии
-        self.private_key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=2048
-        )
-        self.public_key = self.private_key.public_key()
-        self.public_key2 = None
-
-    # сериализация для отправки публичного ключа
-    def serialize_key(self):
-        return self.public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-
-    def get_public_key(self, public_key2_bytes):
-        self.public_key2 = serialization.load_pem_public_key(public_key2_bytes)
-
-    def encrypt_data(self, data):
-        return data.encrypt(
-            self.public_key2,
-            padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None  # Добавьте этот аргумент label и установите его в None
-            ))
+# class Encrypt:
+#     def __init__(self):
+#         # Генерация ключей для асимметричной криптографии
+#         self.private_key = rsa.generate_private_key(
+#             public_exponent=65537,
+#             key_size=2048
+#         )
+#         self.public_key = self.private_key.public_key()
+#         self.public_key2 = None
+#
+#     # сериализация для отправки публичного ключа
+#     def serialize_key(self):
+#         return self.public_key.public_bytes(
+#             encoding=serialization.Encoding.PEM,
+#             format=serialization.PublicFormat.SubjectPublicKeyInfo
+#         )
+#
+#     def get_public_key(self, public_key2_bytes):
+#         self.public_key2 = serialization.load_pem_public_key(public_key2_bytes)
+#
+#     def encrypt_data(self, data):
+#         return data.encrypt(
+#             self.public_key2,
+#             padding.OAEP(
+#                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
+#                 algorithm=hashes.SHA256(),
+#                 label=None  # Добавьте этот аргумент label и установите его в None
+#             ))
 
 
 if __name__ == "__main__":
