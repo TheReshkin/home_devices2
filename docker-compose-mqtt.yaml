@@ -1,0 +1,67 @@
+version: '3'
+services:
+  device:
+    build:
+      context: ./app/device
+      dockerfile: dockerfile_device_mqtt
+    image: device_mqtt
+    container_name: device_mqtt
+    environment:
+      - BROKER=mosquitto
+      - BROKER_PORT=1883
+      - TOPIC=device
+      - CLIENT_ID=lamp
+    ports:
+      - 9999:1883
+
+  device2:
+    build:
+      context: ./app/device
+      dockerfile: dockerfile_device_mqtt
+    image: device_mqtt
+    container_name: device2_mqtt
+    environment:
+      - BROKER=mosquitto
+      - BROKER_PORT=1883
+      - TOPIC=device
+      - CLIENT_ID=lamp2
+    ports:
+      - 10000:1883
+
+  device3:
+    build:
+      context: ./app/device
+      dockerfile: dockerfile_device_mqtt
+    image: device_mqtt
+    container_name: device3_mqtt
+    environment:
+      - BROKER=mosquitto
+      - BROKER_PORT=1883
+      - TOPIC=device
+      - CLIENT_ID=lamp3
+    ports:
+      - 10001:1883
+  mosquitto:
+    build:
+      context: ./app/broker
+      dockerfile: dockerfile_broker
+    image: eclipse-mosquitto_1
+    container_name: mqtt-broker
+    ports:
+      - 1883:1883
+      - 9001:9001
+
+  home_assistant:
+    build:
+      context: ./app/home_assistant
+      dockerfile: dockerfile_home_assistant_mqtt
+    image: home_assistant_mqtt
+    container_name: home_assistant_mqtt
+    ports:
+      - 9997:1883
+    environment:
+      - BROKER=mosquitto
+      - BROKER_PORT=1883
+      - TOPIC=device
+    restart: always
+

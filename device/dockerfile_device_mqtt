@@ -1,8 +1,9 @@
 # Используйте базовый образ Python
 FROM python:3.9
-COPY requirements.txt /app/requirements.txt
+COPY requirements_mqtt.txt /app/requirements.txt
 RUN pip install --upgrade pip
 RUN pip install -r /app/requirements.txt
-COPY device.py /app
+COPY device_mqtt.py /app
 WORKDIR /app
-CMD ["python", "device.py"]
+EXPOSE 1883
+CMD ["python", "device_mqtt.py"]
