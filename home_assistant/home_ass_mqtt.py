@@ -7,7 +7,6 @@ BROKER_PORT = int(os.environ.get("BROKER_PORT"))
 print(BROKER)
 print(BROKER_PORT)
 
-
 topic = "device"
 
 

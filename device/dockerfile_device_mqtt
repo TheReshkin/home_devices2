@@ -5,5 +5,4 @@ RUN pip install --upgrade pip
 RUN pip install -r /app/requirements.txt
 COPY device_mqtt.py /app
 WORKDIR /app
-EXPOSE 1883
 CMD ["python", "device_mqtt.py"]

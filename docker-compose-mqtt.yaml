@@ -65,3 +65,15 @@ services:
       - TOPIC=device
     restart: always
 
+  bot:
+    build:
+      context: ./app/bot
+      dockerfile: dockerfile
+    image: pybot
+    container_name: telegrambot
+    ports:
+      - 10002:1883
+      - 443:443
+      - 8080:8080
+
+

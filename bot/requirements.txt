@@ -1,0 +1,2 @@
+paho-mqtt==1.6.1
+telebot==0.0.5
